@@ -4,7 +4,7 @@ namespace hatemben\MongoDBAclBundle\Security\Acl;
 
 use Doctrine\Common\PropertyChangedListener;
 
-use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Security\Acl\Domain\RoleSecurityIdentity;
 use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
 use Symfony\Component\Security\Acl\Exception\AclAlreadyExistsException;
@@ -40,7 +40,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
     /**
      * {@inheritDoc}
      */
-    public function __construct(Container $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
+    public function __construct(ContainerInterface $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
     {
         parent::__construct($container, $database, $permissionGrantingStrategy, $options, $aclCache);
 

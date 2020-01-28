@@ -3,7 +3,7 @@
 namespace hatemben\MongoDBAclBundle\Security\Acl;
 
 use MongoDB\Driver\Cursor;
-use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Security\Acl\Domain\Acl;
 use Symfony\Component\Security\Acl\Domain\Entry;
 use Symfony\Component\Security\Acl\Domain\FieldEntry;
@@ -54,7 +54,7 @@ class AclProvider implements AclProviderInterface
      * @param array $options
      * @param AclCacheInterface $aclCache
      */
-    public function __construct(Container $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
+    public function __construct(ContainerInterface $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
     {
         $this->aclCache = $aclCache;
         $mongo = $container->get('doctrine_mongodb.odm.default_connection');

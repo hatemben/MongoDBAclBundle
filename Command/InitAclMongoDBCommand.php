@@ -51,11 +51,11 @@ class InitAclMongoDBCommand extends Command
         $dbName = $this->container->getParameter('doctrine_mongodb.odm.security.acl.database');
         $db = $mongo->selectDatabase($dbName);
 
-        $oidCollection = $db->selectCollection($container->getParameter('doctrine_mongodb.odm.security.acl.oid_collection'));
+        $oidCollection = $db->selectCollection($this->container->getParameter('doctrine_mongodb.odm.security.acl.oid_collection'));
         $oidCollection->ensureIndex(array('randomKey' => 1), array());
         $oidCollection->ensureIndex(array('identifier' => 1, 'type' => 1));
 
-        $entryCollection = $db->selectCollection($container->getParameter('doctrine_mongodb.odm.security.acl.entry_collection'));
+        $entryCollection = $db->selectCollection($this->container->getParameter('doctrine_mongodb.odm.security.acl.entry_collection'));
         $entryCollection->ensureIndex(array('objectIdentity.$id' => 1));
 
         $output->writeln('ACL indexes have been initialized successfully.');
