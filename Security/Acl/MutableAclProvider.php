@@ -76,9 +76,11 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         $children = $this->findChildren($oid);
         foreach ($children as $child) {
             $childId = $child['_id'];
-            $removable[(string)$childId] = $childId;
-            foreach ($child['ancestors'] as $ancestor) {
-                $removable[(string)$ancestor] = $ancestor;
+	    $removable[(string)$childId] = $childId;
+	        if (isset($child['ancestors'])) {
+                foreach ($child['ancestors'] as $ancestor) {
+                    $removable[(string)$ancestor] = $ancestor;
+                }
             }
         }
 
