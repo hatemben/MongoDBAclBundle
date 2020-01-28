@@ -1,6 +1,6 @@
 <?php
 
-namespace IamPersistent\MongoDBAclBundle\DependencyInjection;
+namespace hatemben\MongoDBAclBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -30,8 +30,8 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('iam_persistent_mongo_db_acl');
+        $treeBuilder = new TreeBuilder('acl_provider');
+        $rootNode = $treeBuilder->root('mongo_db_acl');
 
         $this->addAclProviderSection($rootNode);
 

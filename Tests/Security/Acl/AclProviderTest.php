@@ -1,13 +1,13 @@
 <?php
 
-namespace IamPersistent\MongoDBAclBundle\Tests\Security\Acl;
+namespace hatemben\MongoDBAclBundle\Tests\Security\Acl;
 
-use IamPersistent\MongoDBAclBundle\Security\Acl\AclProvider;
+use hatemben\MongoDBAclBundle\Security\Acl\AclProvider;
 use Symfony\Component\Security\Acl\Domain\PermissionGrantingStrategy;
 use Symfony\Component\Security\Acl\Domain\ObjectIdentity;
-use Doctrine\MongoDB\Connection;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class AclProviderTest extends \PHPUnit_Framework_TestCase
+class AclProviderTest extends \PHPUnit\Framework\TestCase
 {
     protected $con;
     protected $entryCollection;
@@ -15,6 +15,15 @@ class AclProviderTest extends \PHPUnit_Framework_TestCase
     protected $oidAncestorCollection;
     protected $sidCollection;
     protected $oids = array();
+
+    /**
+     * @var container
+     */
+    protected $container;
+
+    public function __construct(ContainerInterface $container){
+        $this->container = $container;
+    }
 
     public function testFindAclThrowsExceptionWhenNoAclExists()
     {
@@ -121,7 +130,7 @@ class AclProviderTest extends \PHPUnit_Framework_TestCase
             $this->markTestSkipped('Doctrine2 MongoDB is required for this test');
         }
         $database = 'aclTest';
-        $this->connection = $mongo = new \Doctrine\MongoDB\Connection();
+        $this->connection = $mongo = $this->container->get('doctrine_mongodb.odm.default_connection');
         $this->con = $mongo->selectDatabase($database);
 
         $options = $this->getOptions();

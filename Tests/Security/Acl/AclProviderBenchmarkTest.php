@@ -1,19 +1,28 @@
 <?php
 
-namespace IamPersistent\MongoDBAclBundle\Tests\Security\Acl;
+namespace hatemben\MongoDBAclBundle\Tests\Security\Acl;
 
-use Doctrine\MongoDB\Connection;
-use IamPersistent\MongoDBAclBundle\Security\Acl\AclProvider;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use hatemben\MongoDBAclBundle\Security\Acl\AclProvider;
 use Symfony\Component\Security\Acl\Domain\PermissionGrantingStrategy;
 use Symfony\Component\Security\Acl\Domain\ObjectIdentity;
 use Symfony\Component\Security\Acl\Domain\RoleSecurityIdentity;
 use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
 use Symfony\Component\Security\Core\Role\Role;
 
-class AclProviderBenchmarkTest extends \PHPUnit_Framework_TestCase
+class AclProviderBenchmarkTest extends \PHPUnit\Framework\TestCase
 {
     protected $con;
     protected $options;
+
+    /**
+     * @var container
+     */
+    protected $container;
+
+    public function __construct(ContainerInterface $container){
+        $this->container = $container;
+    }
 
     public function testFindAcls()
     {
@@ -43,11 +52,11 @@ class AclProviderBenchmarkTest extends \PHPUnit_Framework_TestCase
         // comment the following line, and run only this test, if you need to benchmark
         $this->markTestSkipped('Benchmarking skipped');
 
-        if (!class_exists('Doctrine\MongoDB\Connection')) {
-            $this->markTestSkipped('Doctrine2 MongoDB is required for this test');
+        if (!class_exists('\MongoDB\Driver\Cursor')) {
+            $this->markTestSkipped('MongoDB-Ext is required for this test');
         }
         $database = 'aclBenchmark';
-        $mongo = new \Doctrine\MongoDB\Connection();
+        $mongo = $this->container->get('doctrine_mongodb.odm.default_connection');
         $this->con = $mongo->selectDatabase($database);
         $this->options = $this->getOptions();
     }

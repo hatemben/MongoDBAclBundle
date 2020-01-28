@@ -1,12 +1,11 @@
 <?php
 
-namespace IamPersistent\MongoDBAclBundle\Tests\Security\Acl;
+namespace hatemben\MongoDBAclBundle\Tests\Security\Acl;
 
-use Doctrine\MongoDB\Connection;
-
-use Doctrine\MongoDB\Database;
-use IamPersistent\MongoDBAclBundle\Security\Acl\AclProvider;
-use IamPersistent\MongoDBAclBundle\Security\Acl\MutableAclProvider;
+use MongoDB\Database;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use hatemben\MongoDBAclBundle\Security\Acl\AclProvider;
+use hatemben\MongoDBAclBundle\Security\Acl\MutableAclProvider;
 use Symfony\Component\Security\Acl\Domain\Acl;
 use Symfony\Component\Security\Acl\Domain\Entry;
 use Symfony\Component\Security\Acl\Domain\ObjectIdentity;
@@ -17,10 +16,9 @@ use Symfony\Component\Security\Acl\Exception\AclNotFoundException;
 use Symfony\Component\Security\Acl\Exception\ConcurrentModificationException;
 use Symfony\Component\Security\Acl\Model\AuditableEntryInterface;
 use Symfony\Component\Security\Acl\Model\EntryInterface;
-use Symfony\Component\Security\Acl\Model\FieldAwareEntryInterface;
 use Symfony\Component\Security\Acl\Model\FieldEntryInterface;
 
-class MutableAclProviderTest extends \PHPUnit_Framework_TestCase
+class MutableAclProviderTest extends \PHPUnit\Framework\TestCase
 {
     static protected $database = 'aclTest';
     /**
@@ -32,6 +30,16 @@ class MutableAclProviderTest extends \PHPUnit_Framework_TestCase
      * @var Connection
      */
     protected $connection;
+
+
+    /**
+     * @var container
+     */
+    protected $container;
+
+    public function __construct(ContainerInterface $container){
+        $this->container = $container;
+    }
 
     public static function assertAceEquals(EntryInterface $a, EntryInterface $b)
     {
@@ -49,7 +57,7 @@ class MutableAclProviderTest extends \PHPUnit_Framework_TestCase
             self::assertSame($a->isAuditFailure(), $b->isAuditFailure());
         }
 
-        if ($a instanceof FieldEntryInterface || $a instanceof FieldAwareEntryInterface) {
+        if ($a instanceof FieldEntryInterface) {
             self::assertSame($a->getField(), $b->getField());
         }
     }
@@ -283,7 +291,7 @@ class MutableAclProviderTest extends \PHPUnit_Framework_TestCase
         $args = array(
             $this->connection, static::$database, new PermissionGrantingStrategy(), array(),
         );
-        $provider = $this->getMockBuilder('IamPersistent\MongoDBAclBundle\Security\Acl\MutableAclProvider')
+        $provider = $this->getMockBuilder('hatemben\MongoDBAclBundle\Security\Acl\MutableAclProvider')
                 ->setConstructorArgs($args)
                 ->getMock();
         $provider
@@ -464,10 +472,10 @@ class MutableAclProviderTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        if (!class_exists('Doctrine\MongoDB\Connection')) {
-            $this->markTestSkipped('Doctrine2 MongoDB is required for this test');
+        if (!class_exists('\MongoDB\Driver\Cursor')) {
+            $this->markTestSkipped('Ext-MongoDB is required for this test');
         }
-        $this->connection = new Connection();
+        $this->connection = $this->container->get('doctrine_mongodb.odm.default_connection');
         $this->con = $this->connection->selectDatabase(static::$database);
     }
 

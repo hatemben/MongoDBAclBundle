@@ -1,10 +1,9 @@
 <?php
 
-namespace IamPersistent\MongoDBAclBundle\Security\Acl;
+namespace hatemben\MongoDBAclBundle\Security\Acl;
 
-use Doctrine\MongoDB\Cursor;
-use Doctrine\MongoDB\Connection;
-
+use MongoDB\Driver\Cursor;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Security\Acl\Domain\Acl;
 use Symfony\Component\Security\Acl\Domain\Entry;
 use Symfony\Component\Security\Acl\Domain\FieldEntry;
@@ -49,16 +48,17 @@ class AclProvider implements AclProviderInterface
     /**
      * Constructor
      *
-     * @param \Doctrine\MongoDb\Connection $connection
+     * @param \MongoDB\Driver\Manager $manager
      * @param string $database
      * @param PermissionGrantingStrategyInterface $permissionGrantingStrategy
      * @param array $options
      * @param AclCacheInterface $aclCache
      */
-    public function __construct(Connection $connection, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
+    public function __construct(Container $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
     {
         $this->aclCache = $aclCache;
-        $this->connection = $connection->selectDatabase($database);
+        $mongo = $container->get('doctrine_mongodb.odm.default_connection');
+        $this->connection = $mongo->selectDatabase($database);
         $this->loadedAces = array();
         $this->loadedAcls = array();
         $this->options = $options;

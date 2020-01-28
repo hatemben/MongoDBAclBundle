@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace IamPersistent\MongoDBAclBundle\DependencyInjection;
+namespace hatemben\MongoDBAclBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
@@ -17,7 +17,7 @@ use Symfony\Component\Config\Definition\Processor;
 /**
  * @author Richard Shank <develop@zestic.com>
  */
-class IamPersistentMongoDBAclExtension extends Extension
+class MongoDBAclExtension extends Extension
 {
     /**
      * Responds to the doctrine_mongodb configuration parameter.
@@ -47,7 +47,7 @@ class IamPersistentMongoDBAclExtension extends Extension
 
     public function getAlias()
     {
-        return 'iam_persistent_mongo_db_acl';
+        return 'mongo_db_acl';
     }
 
     /**

@@ -9,19 +9,27 @@
  * file that was distributed with this source code.
  */
 
-namespace IamPersistent\MongoDBAclBundle\Command;
+namespace hatemben\MongoDBAclBundle\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Set the indexes required by the MongoDB ACL provider
  *
  * @author Richard Shank <develop@zestic.com>
  */
-class InitAclMongoDBCommand extends ContainerAwareCommand
+class InitAclMongoDBCommand extends Command
 {
+
+    protected $container;
+
+    public function __construct(ContainerInterface $container) {
+        $this->container = $container;
+        parent::__construct();
+    }
     /**
      * @see Command
      */
@@ -39,9 +47,8 @@ class InitAclMongoDBCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         // todo: change services and paramters when the configuration has been finalized
-        $container = $this->getContainer();
-        $mongo = $container->get('doctrine_mongodb.odm.default_connection');
-        $dbName = $container->getParameter('doctrine_mongodb.odm.security.acl.database');
+        $mongo = $this->container->get('doctrine_mongodb.odm.default_connection');
+        $dbName = $this->container->getParameter('doctrine_mongodb.odm.security.acl.database');
         $db = $mongo->selectDatabase($dbName);
 
         $oidCollection = $db->selectCollection($container->getParameter('doctrine_mongodb.odm.security.acl.oid_collection'));

@@ -1,9 +1,9 @@
 MongoDB ACL Bundle
 ====================
 
-This bundle allows the use of MongoDB as the storage layer for the Symfony ACLs component.
+This bundle allows the use of MongoDB as the storage layer for the Symfony ACLs component. This bundle's code is very old, will look around and update it.
 
-[![Build Status](https://secure.travis-ci.org/iampersistent/MongoDBAclBundle.png?branch=master)](http://travis-ci.org/iampersistent/MongoDBAclBundle)
+[![Build Status](https://secure.travis-ci.org/iampersistent/MongoDBAclBundle.png?branch=master)](http://travis-ci.org/hatemben/MongoDBAclBundle)
 
 
 Documentation
