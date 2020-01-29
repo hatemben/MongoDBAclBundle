@@ -30,6 +30,5 @@
         "psr-0": {
             "hatemben\\MongoDBAclBundle": ""
         }
-    },
-    "target-dir": "hatemben/MongoDBAclBundle"
+    }
 }
