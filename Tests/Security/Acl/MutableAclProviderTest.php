@@ -38,6 +38,7 @@ class MutableAclProviderTest extends \PHPUnit\Framework\TestCase
     protected $container;
 
     public function __construct(ContainerInterface $container){
+        parent::__construct($container);
         $this->container = $container;
     }
 
@@ -473,7 +474,7 @@ class MutableAclProviderTest extends \PHPUnit\Framework\TestCase
     protected function doSetUp()
     {
         parent::setUp();
-        
+
         if (!class_exists('\MongoDB\Driver\Cursor')) {
             $this->markTestSkipped('Ext-MongoDB is required for this test');
         }

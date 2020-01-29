@@ -22,6 +22,7 @@ class AclProviderTest extends \PHPUnit\Framework\TestCase
     protected $container;
 
     public function __construct(ContainerInterface $container){
+        parent::__construct($container);
         $this->container = $container;
     }
 
