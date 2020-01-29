@@ -470,8 +470,10 @@ class MutableAclProviderTest extends \PHPUnit\Framework\TestCase
         return $method->invokeArgs($object, $args);
     }
 
-    protected function setUp()
+    protected function doSetUp()
     {
+        parent::setUp();
+        
         if (!class_exists('\MongoDB\Driver\Cursor')) {
             $this->markTestSkipped('Ext-MongoDB is required for this test');
         }
@@ -479,8 +481,9 @@ class MutableAclProviderTest extends \PHPUnit\Framework\TestCase
         $this->con = $this->connection->selectDatabase(static::$database);
     }
 
-    protected function tearDown()
+    protected function doTearDown()
     {
+        parent::tearDown();
         $this->oid = array();
         if ($this->connection) {
             $this->connection->close();

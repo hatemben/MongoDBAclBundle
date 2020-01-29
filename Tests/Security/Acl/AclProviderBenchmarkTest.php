@@ -47,8 +47,10 @@ class AclProviderBenchmarkTest extends \PHPUnit\Framework\TestCase
     }
 
 
-    protected function setUp()
+    protected function doSetUp()
     {
+        parent::setUp();
+
         // comment the following line, and run only this test, if you need to benchmark
         $this->markTestSkipped('Benchmarking skipped');
 
@@ -61,9 +63,11 @@ class AclProviderBenchmarkTest extends \PHPUnit\Framework\TestCase
         $this->options = $this->getOptions();
     }
 
-    protected function tearDown()
+    protected function doTearDown()
     {
         $this->con = null;
+
+        parent::tearDown();
     }
 
     /**

@@ -124,8 +124,10 @@ class AclProviderTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('SomeClass', $sid->getClass());
     }
 
-    protected function setUp()
+    protected function doSetUp()
     {
+        parent::setUp();
+
         if (!class_exists('Doctrine\MongoDB\Connection')) {
             $this->markTestSkipped('Doctrine2 MongoDB is required for this test');
         }
@@ -193,8 +195,10 @@ class AclProviderTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    protected function tearDown()
+    protected function doTearDown()
     {
+        parent::tearDown();
+
         $this->oid = array();
         $this->connection->close();
         $this->connection = null;
