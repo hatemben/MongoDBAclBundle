@@ -27,8 +27,11 @@
         "phpunit/phpunit": "^8.5"
     },
     "autoload": {
-        "psr-0": {
-            "hatemben\\MongoDBAclBundle": ""
-        }
+        "psr-4": {
+            "hatemben\\MongoDBAclBundle\\": ""
+        },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
     }
 }
