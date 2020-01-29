@@ -6,7 +6,8 @@ use Doctrine\Common\PropertyChangedListener;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Security\Acl\Domain\RoleSecurityIdentity;
-use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
+//use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
+use hatemben\MongoDBAclBundle\Security\Acl\Domain\UserSecurityIdentity;
 use Symfony\Component\Security\Acl\Exception\AclAlreadyExistsException;
 use Symfony\Component\Security\Acl\Exception\ConcurrentModificationException;
 use Symfony\Component\Security\Acl\Model\AclCacheInterface;
@@ -494,7 +495,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
     protected function getSecurityIdentityQuery(SecurityIdentityInterface $sid)
     {
         if ($sid instanceof UserSecurityIdentity) {
-            return array('username' => $sid->getUsername(), 'class' => $sid->getClass());
+            return array('username' => $sid->getUserId(), 'class' => $sid->getClass());
         } else if ($sid instanceof RoleSecurityIdentity) {
             return array('role' => $sid->getRole());
         } else {

@@ -9,7 +9,8 @@ use Symfony\Component\Security\Acl\Domain\Entry;
 use Symfony\Component\Security\Acl\Domain\FieldEntry;
 use Symfony\Component\Security\Acl\Domain\ObjectIdentity;
 use Symfony\Component\Security\Acl\Domain\RoleSecurityIdentity;
-use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
+//use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
+use hatemben\MongoDBAclBundle\Security\Acl\Domain\UserSecurityIdentity;
 use Symfony\Component\Security\Acl\Exception\AclNotFoundException;
 use Symfony\Component\Security\Acl\Exception\NotAllAclsFoundException;
 use Symfony\Component\Security\Acl\Model\AclCacheInterface;
@@ -74,11 +75,11 @@ class AclProvider implements AclProviderInterface
 
         if ($directChildrenOnly) {
             $query = array(
-                "parent" => $parentId,
+                "parent._id" => $parentId,
             );
         } else {
             $query = array(
-                "ancestors" => $parentId,
+                "ancestors._id" => $parentId,
             );
         }
         $children = array();
