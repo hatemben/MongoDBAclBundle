@@ -27,10 +27,6 @@ To use the MongoDB Acl Provider, the minimal configuration is adding acl_provide
 The next requirement is to add the provider to the security configuration::
 
     # app/config/security.yml
-    services:
-        mongodb_acl_provider:
-            parent: doctrine_mongodb.odm.security.acl.provider
-
     security:
         acl:
             provider: mongodb_acl_provider

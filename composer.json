@@ -23,8 +23,7 @@
         "doctrine/mongodb-odm-bundle": "4.1.*",
         "doctrine/mongodb-odm":"2.0.*",
         "symfony/security": "4.*",
-        "symfony/acl-bundle": "^2.0",
-        "phpunit/phpunit": "^8.5"
+        "symfony/acl-bundle": "^2.0"
     },
     "autoload": {
         "psr-4": {

@@ -1,11 +1,5 @@
 <?php
 
-/*
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace hatemben\MongoDBAclBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -16,15 +10,18 @@ use Symfony\Component\Config\Definition\Processor;
 
 /**
  * @author Richard Shank <develop@zestic.com>
+ * @author Piotr Walków <walkowpiotr@gmail.com>
  */
 class MongoDBAclExtension extends Extension
 {
     /**
      * Responds to the doctrine_mongodb configuration parameter.
+     *
+     * @param array $configs
+     * @param ContainerBuilder $container
      */
     public function load(array $configs, ContainerBuilder $container)
     {
-        // Load DoctrineMongoDBBundle/Resources/config/mongodb.xml
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('security.xml');
 

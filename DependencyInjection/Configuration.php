@@ -30,7 +30,7 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder('acl_provider');
+        $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('mongo_db_acl');
 
         $this->addAclProviderSection($rootNode);
@@ -40,6 +40,7 @@ class Configuration implements ConfigurationInterface
 
     /**
      * Adds the configuration for the "acl_provider" key
+     * @param ArrayNodeDefinition $rootNode
      */
     private function addAclProviderSection(ArrayNodeDefinition $rootNode)
     {

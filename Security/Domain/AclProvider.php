@@ -1,31 +1,22 @@
 <?php
 
-namespace hatemben\MongoDBAclBundle\Security\Acl;
+namespace hatemben\MongoDBAclBundle\Security\Domain;
 
-use MongoDB\Driver\Cursor;
-use Psr\Container\ContainerInterface;
+use Doctrine\MongoDB\Cursor;
+use Doctrine\MongoDB\Connection;
 use Symfony\Component\Security\Acl\Domain\Acl;
 use Symfony\Component\Security\Acl\Domain\Entry;
 use Symfony\Component\Security\Acl\Domain\FieldEntry;
 use Symfony\Component\Security\Acl\Domain\ObjectIdentity;
 use Symfony\Component\Security\Acl\Domain\RoleSecurityIdentity;
-//use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
-use hatemben\MongoDBAclBundle\Security\Acl\Domain\UserSecurityIdentity;
+use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
 use Symfony\Component\Security\Acl\Exception\AclNotFoundException;
 use Symfony\Component\Security\Acl\Exception\NotAllAclsFoundException;
 use Symfony\Component\Security\Acl\Model\AclCacheInterface;
+use Symfony\Component\Security\Acl\Model\AclInterface;
 use Symfony\Component\Security\Acl\Model\AclProviderInterface;
 use Symfony\Component\Security\Acl\Model\ObjectIdentityInterface;
 use Symfony\Component\Security\Acl\Model\PermissionGrantingStrategyInterface;
-
-/*
- * This file is part of the Symfony framework.
- *
- * (c) Fabien Potencier <fabien.potencier@symfony-project.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
 
 /**
  * An ACL provider implementation.
@@ -46,20 +37,25 @@ class AclProvider implements AclProviderInterface
     protected $options;
     protected $permissionGrantingStrategy;
 
+    const OID_COLLECTION_NAME = 'aclObjectIdentities';
+    const ENTRY_COLLECTION_NAME = 'aclEntries';
+
+    const OPTION_KEY_OID_COLLECTION = 'oid_collection';
+    const OPTION_KEY_ENTRY_COLLECTION = 'entry_collection';
+
     /**
      * Constructor
      *
-     * @param \MongoDB\Driver\Manager $manager
+     * @param \Doctrine\MongoDb\Connection $connection
      * @param string $database
      * @param PermissionGrantingStrategyInterface $permissionGrantingStrategy
      * @param array $options
      * @param AclCacheInterface $aclCache
      */
-    public function __construct(ContainerInterface $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
+    public function __construct(Connection $connection, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
     {
         $this->aclCache = $aclCache;
-        $mongo = $container->get('doctrine_mongodb.odm.default_connection');
-        $this->connection = $mongo->selectDatabase($database);
+        $this->connection = $connection->selectDatabase($database);
         $this->loadedAces = array();
         $this->loadedAcls = array();
         $this->options = $options;
@@ -75,15 +71,15 @@ class AclProvider implements AclProviderInterface
 
         if ($directChildrenOnly) {
             $query = array(
-                "parent._id" => $parentId,
+                "parent" => $parentId,
             );
         } else {
             $query = array(
-                "ancestors._id" => $parentId,
+                "ancestors" => $parentId,
             );
         }
         $children = array();
-        foreach ($this->connection->selectCollection($this->options['oid_collection'])->find($query) as $data) {
+        foreach ($this->connection->selectCollection($this->options[self::OPTION_KEY_OID_COLLECTION])->find($query) as $data) {
             $children[] = $data;
         }
         return $children;
@@ -218,6 +214,7 @@ class AclProvider implements AclProviderInterface
      * @param array $batch
      * @param array $sids
      * @param array $oidLookup
+     *
      * @return \SplObjectStorage mapping object identities to ACL instances
      */
     protected function lookupObjectIdentities(array $batch, array $sids, array $oidLookup)
@@ -228,11 +225,24 @@ class AclProvider implements AclProviderInterface
             throw new AclNotFoundException('There is no ACL for the given object identity.');
         }
 
-        list($oids, $types) = $this->getOidTypeSet($objIdentities, $sids);
-        $entryQuery = array('$or' => array(array('objectIdentity.$id' => array('$in' => $oids)), array('securityIdentity.class' => array('$in' => $types))));
-	    $entryCursor = $this->connection->selectCollection($this->options['entry_collection'])->find($entryQuery);
+        list($oids, $types) = $this->getOidTypeSet($objIdentities);
+        $entryQuery =[
+            '$or' => [
+                [
+                    'objectIdentity.$id' => [
+                        '$in' => $oids
+                    ]
+                ],
+                [
+                    'class' => [
+                        '$in' => array_values($types)
+                    ]
+                ],
+            ],
+        ];
+        $entryCursor = $this->connection->selectCollection($this->options[self::OPTION_KEY_ENTRY_COLLECTION])->find($entryQuery);
         $oidQuery = array('_id' => array('$in' => $oids));
-        $oidCursor = $this->connection->selectCollection($this->options['oid_collection'])->find($oidQuery);
+        $oidCursor = $this->connection->selectCollection($this->options[self::OPTION_KEY_OID_COLLECTION])->find($oidQuery);
         return $this->hydrateObjectIdentities($entryCursor, $oidCursor, $oidLookup, $sids);
     }
 
@@ -240,12 +250,12 @@ class AclProvider implements AclProviderInterface
      * Retrieves the documents associated with the values in the batch
      *
      * @param array $batch ObjectIdentity
+     *
      * @return \Doctrine\MongoDB\Cursor
      */
     protected function getObjectIdentities(array &$batch)
     {
-        $batchSet = array();
-        $dataSet = new \SplObjectStorage();
+        $batchSet = [];
         for ($i = 0, $c = count($batch); $i < $c; $i++) {
             $batchSet[] = $query = array(
                 "identifier" => $batch[$i]->getIdentifier(),
@@ -254,23 +264,24 @@ class AclProvider implements AclProviderInterface
         }
         $query = array('$or' => $batchSet);
 
-        return $this->connection->selectCollection($this->options['oid_collection'])->find($query);
+        return $this->connection->selectCollection($this->options[self::OPTION_KEY_OID_COLLECTION])->find($query);
     }
 
     /**
      * Retrieve the document associated with the values in the ObjectIdentity
      *
-     * @param ObjectIdentity $oid
+     * @param ObjectIdentityInterface $oid
+     *
      * @return \Doctrine\MongoDB\Cursor
      */
-    protected function getObjectIdentity(ObjectIdentity $oid)
+    protected function getObjectIdentity(ObjectIdentityInterface $oid)
     {
-        $query = array(
+        $query = [
             "identifier" => $oid->getIdentifier(),
             "type" => $oid->getType(),
-        );
+        ];
 
-        return $this->connection->selectCollection($this->options['oid_collection'])->findOne($query);
+        return $this->connection->selectCollection($this->options[self::OPTION_KEY_OID_COLLECTION])->findOne($query);
     }
 
     /**
@@ -278,14 +289,14 @@ class AclProvider implements AclProviderInterface
      * ACEs, and security identities.
      *
      * @param Cursor $objectCursor
-     * @param array $sids
+     *
      * @return array $query
      */
-    protected function getOidTypeSet(Cursor $objectCursor, array $sids)
+    protected function getOidTypeSet(Cursor $objectCursor)
     {
         // FIXME: add support for filtering by sids (right now we select all sids)
-        $oids = array();
-        $types = array();
+        $oids = [];
+        $types = [];
         $objectData = iterator_to_array($objectCursor);
         foreach ($objectData as $object) {
             $oids[] = $object['_id'];
@@ -295,7 +306,7 @@ class AclProvider implements AclProviderInterface
                 $types = array_merge($types, $object['ancestors']);
             }
         }
-        return array(array_unique($oids), array_unique($types));
+        return [array_unique($oids), array_unique($types)];
     }
 
     /**
@@ -307,17 +318,18 @@ class AclProvider implements AclProviderInterface
      * Keep in mind that changes to this method might severely reduce the
      * performance of the entire ACL system.
      *
-     * @param Cursor $cursor
-     * @param Cursor $objectIdentities
+     * @param Cursor $entryCursor
+     * @param Cursor $objectCursor
      * @param array $oidLookup
      * @param array $sids
-     * @throws \RuntimeException
      * @return \SplObjectStorage
+     * @internal param Cursor $cursor
+     * @internal param Cursor $objectIdentities
      */
     protected function hydrateObjectIdentities(Cursor $entryCursor, Cursor $objectCursor, array $oidLookup, array $sids)
     {
         $parentIdToFill = new \SplObjectStorage();
-        $acls = $aces = $emptyArray = array();
+        $acls = $aces = $emptyArray = [];
         $oidCache = $oidLookup;
         $result = new \SplObjectStorage();
         $loadedAces =& $this->loadedAces;
@@ -338,7 +350,7 @@ class AclProvider implements AclProviderInterface
         $aclParentAclProperty->setAccessible(true);
 
 
-        $entries = $classEntries = array();
+        $entries = $classEntries = [];
 
         /**
          * using iterator_to_array is faster, but could cause potential problems with low memory, high data set
@@ -373,7 +385,7 @@ class AclProvider implements AclProviderInterface
                         $parent = $parent['parent'];
                     }
                 }
-                $entries[$aclId][0] = array(
+                $entries[$aclId][0] = [
                     'objectIdentity' => $parent,
                     'fieldName' => null,
                     'aceOrder' => null,
@@ -382,7 +394,7 @@ class AclProvider implements AclProviderInterface
                     'granting' => null,
                     'auditFailure' => null,
                     'auditSuccess' => null,
-                );
+                ];
             }
 
             //Attach the class aces to the right entry if the type of current object matches class
@@ -456,7 +468,7 @@ class AclProvider implements AclProviderInterface
                 if (0 !== $aceId) {
                     // have we already hydrated ACEs for this ACL?
                     if (!isset($aces[$aclId])) {
-                        $aces[$aclId] = array($emptyArray, $emptyArray, $emptyArray, $emptyArray);
+                        $aces[$aclId] = [$emptyArray, $emptyArray, $emptyArray, $emptyArray];
                     }
 
                     // has this ACE already been hydrated during a previous cycle, or
@@ -566,15 +578,66 @@ class AclProvider implements AclProviderInterface
      */
     protected function retrieveObjectIdentityPrimaryKey(ObjectIdentityInterface $oid)
     {
-        $query = array(
+        $query = [
             "identifier" => $oid->getIdentifier(),
             "type" => $oid->getType(),
-        );
+        ];
 
-        $fields = array(
+        $fields = [
             "_id" => true,
-        );
-        $id = $this->connection->selectCollection($this->options['oid_collection'])->findOne($query, $fields);
+        ];
+        $id = $this->connection->selectCollection($this->options[self::OPTION_KEY_OID_COLLECTION])->findOne($query, $fields);
         return $id ? array_pop($id) : null;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getDefaultOptions()
+    {
+        return [
+            self::OPTION_KEY_OID_COLLECTION => self::OID_COLLECTION_NAME,
+            self::OPTION_KEY_ENTRY_COLLECTION => self::ENTRY_COLLECTION_NAME,
+            'sid_table_name' => 'aclSecurityIdentities',
+        ];
+    }
+        /**
+     * This method is called when an ACL instance is retrieved from the cache.
+     *
+     * @param AclInterface $acl
+     */
+    private function updateAceIdentityMap(AclInterface $acl)
+    {
+        foreach (array('classAces', 'classFieldAces', 'objectAces', 'objectFieldAces') as $property) {
+            $reflection = new \ReflectionProperty($acl, $property);
+            $reflection->setAccessible(true);
+            $value = $reflection->getValue($acl);
+            if ('classAces' === $property || 'objectAces' === $property) {
+                $this->doUpdateAceIdentityMap($value);
+            } else {
+                foreach ($value as $field => $aces) {
+                    $this->doUpdateAceIdentityMap($value[$field]);
+                }
+            }
+            $reflection->setValue($acl, $value);
+            $reflection->setAccessible(false);
+        }
+    }
+
+    /**
+     * Does either overwrite the passed ACE, or saves it in the global identity
+     * map to ensure every ACE only gets instantiated once.
+     *
+     * @param array &$aces
+     */
+    private function doUpdateAceIdentityMap(array &$aces)
+    {
+        foreach ($aces as $index => $ace) {
+            if (isset($this->loadedAces[$ace->getId()])) {
+                $aces[$index] = $this->loadedAces[$ace->getId()];
+            } else {
+                $this->loadedAces[$ace->getId()] = $ace;
+            }
+        }
     }
 }
