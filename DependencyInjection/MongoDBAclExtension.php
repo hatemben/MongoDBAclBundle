@@ -26,7 +26,7 @@ class MongoDBAclExtension extends Extension
         $loader->load('security.xml');
 
         $processor = new Processor();
-        $configuration = new Configuration($container->getParameter('kernel.debug'));
+        $configuration = $this->getConfiguration($configs, $container);
         $config = $processor->processConfiguration($configuration, $configs);
 
         if (isset($config['acl_provider']) && isset($config['acl_provider']['default_database'])) {
@@ -34,12 +34,18 @@ class MongoDBAclExtension extends Extension
         }
     }
 
+    public function getConfiguration(array $config, ContainerBuilder $container)
+    {
+        return new Configuration($this->getAlias());
+    }
+
     protected function loadAcl($config, ContainerBuilder $container)
     {
-        $container->setParameter('doctrine_mongodb.odm.security.acl.database', $config['default_database']);
 
+        $container->setParameter('doctrine_mongodb.odm.security.acl.database', $config['default_database']);
         $container->setParameter('doctrine_mongodb.odm.security.acl.entry_collection', $config['collections']['entry']);
         $container->setParameter('doctrine_mongodb.odm.security.acl.oid_collection', $config['collections']['object_identity']);
+
     }
 
     public function getAlias()
