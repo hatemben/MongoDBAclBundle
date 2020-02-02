@@ -47,4 +47,20 @@ The full acl provider configuration options are listed below::
 
 Then initialize the MongoDB ACL with the following command::
 
-    ./bin/console sonata:admin:setup-acl
+    $./bin/console sonata:admin:setup-acl
+    ACL indexes have been initialized successfully.
+
+Then you can test sonata admin for example ::
+
+    $ ./bin/console sonata:admin:setup-acl
+    Starting ACL AdminBundle configuration
+     > install ACL for sonata.user.admin.user
+       - add role: ROLE_SONATA_USER_ADMIN_USER_GUEST, permissions: ["LIST"]
+       - add role: ROLE_SONATA_USER_ADMIN_USER_STAFF, permissions: ["LIST","CREATE"]
+       - add role: ROLE_SONATA_USER_ADMIN_USER_EDITOR, permissions: ["OPERATOR","EXPORT"]
+       - add role: ROLE_SONATA_USER_ADMIN_USER_ADMIN, permissions: ["MASTER"]
+     > install ACL for sonata.user.admin.group
+       - add role: ROLE_SONATA_USER_ADMIN_GROUP_GUEST, permissions: ["LIST"]
+       - add role: ROLE_SONATA_USER_ADMIN_GROUP_STAFF, permissions: ["LIST","CREATE"]
+       - add role: ROLE_SONATA_USER_ADMIN_GROUP_EDITOR, permissions: ["OPERATOR","EXPORT"]
+       - add role: ROLE_SONATA_USER_ADMIN_GROUP_ADMIN, permissions: ["MASTER"]
