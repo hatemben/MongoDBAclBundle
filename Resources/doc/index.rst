@@ -9,41 +9,35 @@ To install MongoDBAclBundle using composer add following line to you composer.js
     # composer.json
     "hatemben/mongodb-acl-bundle": "dev-master"
 
-Use the composer update command to start the installation. After the installation add following line into the bundles array in your AppKernel.php file::
-
-    # AppKernel.php
-    new hatemben\MongoDBAclBundle\MongoDBAclBundle()
+Then composer update and the bundle will be added with flex.
 
 Configuration
 -------------
 
-To use the MongoDB Acl Provider, the minimal configuration is adding acl_provider to the MongoDb config in config.yml::
+To use the MongoDB Acl Provider, the minimal configuration is adding acl_provider to the MongoDb config in config/packages/mongo_acl.yaml::
 
-    # app/config/config.yml
+    # config/packages/mongo_acl.yaml
     mongo_db_acl:
         acl_provider: 
-            default_database: %mongodb_database_name%
+            default_database: '%env(MONGODB_DB)%'
 
-The next requirement is to add the provider to the security configuration::
+Then you can test this with Sonata admin by adding in sonata_admin.yaml
 
-    # app/config/security.yml
-    security:
-        acl:
-            provider: mongodb_acl_provider
-
-
+    # config/packages/sonata_admin.yaml
+    sonata_admin:
+        security:
+            handler: sonata.admin.security.handler.acl
 
 The full acl provider configuration options are listed below::
 
     # app/config/config.yml
     mongo_db_acl:
         acl_provider:
-            default_database: ~
+            default_database: '%env(MONGODB_DB)%'
             collections:
-                entry: ~
-                object_identity: ~
+                entry: acl_entry
+                object_identity: acl_oid
 
+Then initialize the MongoDB ACL with the following command::
 
-To initialize the MongoDB ACL run the following command::
-
-    php app/console init:acl:mongodb
+    ./bin/console sonata:admin:setup-acl
