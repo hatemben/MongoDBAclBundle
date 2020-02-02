@@ -9,7 +9,7 @@ First working alpha, but lots of tests need to be done, and code to be reviewed.
 
 ![Image of Acl Options](Resources/public/images/acl-options.png)
 
-[![Build Status](https://secure.travis-ci.org/iampersistent/MongoDBAclBundle.png?branch=master)](http://travis-ci.org/hatemben/MongoDBAclBundle)
+[![Build Status](https://travis-ci.org/hatemben/MongoDBAclBundle.svg?branch=master)](http://travis-ci.org/hatemben/MongoDBAclBundle)
 
 
 Documentation
