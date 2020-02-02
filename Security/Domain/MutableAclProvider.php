@@ -5,6 +5,7 @@ namespace hatemben\MongoDBAclBundle\Security\Domain;
 use Doctrine\Common\PropertyChangedListener;
 use Doctrine\MongoDB\Connection;
 
+
 use MongoDB\Client;
 use Symfony\Component\Security\Acl\Domain\RoleSecurityIdentity;
 use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
@@ -391,7 +392,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
             '$set' => $updates,
         );
 
-        $this->connection->selectCollection($this->options['oid_collection'])->update($entry, $newData);
+        $this->connection->selectCollection($this->options['oid_collection'])->updateOne($entry, $newData);
     }
 
     /**
@@ -557,8 +558,12 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         if (isset($field)) {
             $criteria['fieldName'] = $field;
         }
-        $this->connection->selectCollection($this->options['entry_collection'])->insertOne($criteria);
-        return $criteria['_id'];
+        $res = $this->connection->selectCollection($this->options['entry_collection'])->insertOne($criteria);
+        if (get_class($res)== 'MongoDB\InsertOneResult')
+        {
+            return $res->getInsertedId();
+        }
+        return $res;
     }
 
     /**
@@ -606,7 +611,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
             $criteria = array(
                 '_id' => new \MongoId($ace->getId()),
             );
-            $this->connection->selectCollection($this->options['entry_collection'])->update($criteria, array('$set' => $update));
+            $this->connection->selectCollection($this->options['entry_collection'])->updateOne($criteria, array('$set' => $update));
         }
     }
 }
