@@ -9,7 +9,14 @@ To install MongoDBAclBundle using composer add following line to you composer.js
     # composer.json
     "hatemben/mongodb-acl-bundle": "dev-master"
 
-Then composer update and the bundle will be added with flex.
+Then composer update and add the lines below to services.yaml ::
+
+    # services.yaml
+    services:
+        hatemben\MongoDBAclBundle\Command\InitAclMongoDBCommand:
+            public: true
+            tags:
+                - { name: 'console.command', command: 'init:acl:mongodb' }
 
 Configuration
 -------------
@@ -21,7 +28,7 @@ To use the MongoDB Acl Provider, the minimal configuration is adding acl_provide
         acl_provider: 
             default_database: '%env(MONGODB_DB)%'
 
-Then you can test this with Sonata admin by adding in sonata_admin.yaml
+Then you can test this with Sonata admin by adding in sonata_admin.yaml::
 
     # config/packages/sonata_admin.yaml
     sonata_admin:
