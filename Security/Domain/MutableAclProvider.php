@@ -5,6 +5,7 @@ namespace hatemben\MongoDBAclBundle\Security\Domain;
 use Doctrine\Common\PropertyChangedListener;
 use Doctrine\MongoDB\Connection;
 
+use MongoDB\Client;
 use Symfony\Component\Security\Acl\Domain\RoleSecurityIdentity;
 use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
 use Symfony\Component\Security\Acl\Exception\AclAlreadyExistsException;
@@ -31,7 +32,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
     /**
      * {@inheritDoc}
      */
-    public function __construct(Connection $connection, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
+    public function __construct(Client $connection, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
     {
         parent::__construct($connection, $database, $permissionGrantingStrategy, $options, $aclCache);
 
@@ -332,7 +333,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         }
 
         // TODO: safe options
-        $this->connection->selectCollection($this->options['oid_collection'])->insert($data);
+        $this->connection->selectCollection($this->options['oid_collection'])->insertOne($data);
     }
 
     /**
@@ -556,7 +557,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         if (isset($field)) {
             $criteria['fieldName'] = $field;
         }
-        $this->connection->selectCollection($this->options['entry_collection'])->insert($criteria);
+        $this->connection->selectCollection($this->options['entry_collection'])->insertOne($criteria);
         return $criteria['_id'];
     }
 

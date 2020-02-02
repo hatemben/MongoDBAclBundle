@@ -101,7 +101,7 @@ class AclProviderBenchmarkTest extends AbstractAclProviderTest
             $acl['ancestors'] = $ancestors;
         }
 
-        $this->oidCollection->insert($acl);
+        $this->oidCollection->insertOne($acl);
 
         $this->generateAces($acl);
 
@@ -171,7 +171,7 @@ class AclProviderBenchmarkTest extends AbstractAclProviderTest
             $query['auditSuccess'] = (boolean)rand(0, 1);
             $query['auditFailure'] = (boolean)rand(0, 1);
 
-            $this->entryCollection->insert($query);
+            $this->entryCollection->insertOne($query);
         }
     }
 

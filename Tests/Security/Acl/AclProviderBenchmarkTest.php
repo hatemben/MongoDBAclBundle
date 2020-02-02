@@ -133,7 +133,7 @@ class AclProviderBenchmarkTest extends \PHPUnit\Framework\TestCase
             $acl['ancestors'] = $ancestors;
         }
 
-        $oidCollection->insert($acl);
+        $oidCollection->insertOne($acl);
 
         $this->generateAces($acl);
 
@@ -204,7 +204,7 @@ class AclProviderBenchmarkTest extends \PHPUnit\Framework\TestCase
             $query['auditSuccess'] = (boolean)rand(0, 1);
             $query['auditFailure'] = (boolean)rand(0, 1);
 
-            $collection->insert($query);
+            $collection->insertOne($query);
         }
     }
 

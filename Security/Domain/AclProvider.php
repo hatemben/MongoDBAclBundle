@@ -2,8 +2,8 @@
 
 namespace hatemben\MongoDBAclBundle\Security\Domain;
 
-use Doctrine\MongoDB\Cursor;
-use Doctrine\MongoDB\Connection;
+use MongoDB\Driver\Cursor;
+use MongoDB\Client;
 use Symfony\Component\Security\Acl\Domain\Acl;
 use Symfony\Component\Security\Acl\Domain\Entry;
 use Symfony\Component\Security\Acl\Domain\FieldEntry;
@@ -52,7 +52,7 @@ class AclProvider implements AclProviderInterface
      * @param array $options
      * @param AclCacheInterface $aclCache
      */
-    public function __construct(Connection $connection, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
+    public function __construct(Client $connection, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
     {
         $this->aclCache = $aclCache;
         $this->connection = $connection->selectDatabase($database);
@@ -221,7 +221,7 @@ class AclProvider implements AclProviderInterface
     {
         // FIXME: add support for filtering by sids (right now we select all sids)
         $objIdentities = $this->getObjectIdentities($batch);
-        if (!$objIdentities->hasNext()) {
+        if ($objIdentities->isDead()) {
             throw new AclNotFoundException('There is no ACL for the given object identity.');
         }
 

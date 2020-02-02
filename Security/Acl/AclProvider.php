@@ -2,6 +2,7 @@
 
 namespace hatemben\MongoDBAclBundle\Security\Acl;
 
+use MongoDB\Client;
 use MongoDB\Driver\Cursor;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Security\Acl\Domain\Acl;
@@ -55,10 +56,10 @@ class AclProvider implements AclProviderInterface
      * @param array $options
      * @param AclCacheInterface $aclCache
      */
-    public function __construct(ContainerInterface $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
+    public function __construct(Client $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
     {
         $this->aclCache = $aclCache;
-        $mongo = $container->get('doctrine_mongodb.odm.default_connection');
+        $mongo = $container;
         $this->connection = $mongo->selectDatabase($database);
         $this->loadedAces = array();
         $this->loadedAcls = array();
@@ -224,7 +225,7 @@ class AclProvider implements AclProviderInterface
     {
         // FIXME: add support for filtering by sids (right now we select all sids)
         $objIdentities = $this->getObjectIdentities($batch);
-        if (!$objIdentities->hasNext()) {
+        if ($objIdentities->isDead()) {
             throw new AclNotFoundException('There is no ACL for the given object identity.');
         }
 

@@ -170,7 +170,7 @@ class AclProviderTest extends AbstractAclProviderTest
                 $query['parent'] = $parent;
             }
             $query['entriesInheriting'] = $data[4];
-            $this->oidCollection->insert($query);
+            $this->oidCollection->insertOne($query);
             $this->oids[$id] = $query;
         }
 
@@ -193,7 +193,7 @@ class AclProviderTest extends AbstractAclProviderTest
             if ($sid) {
                 $query['securityIdentity'] = $sids[$sid];
             }
-            $this->entryCollection->insert($query);
+            $this->entryCollection->insertOne($query);
         }
     }
 

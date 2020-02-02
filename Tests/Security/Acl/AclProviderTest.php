@@ -173,7 +173,7 @@ class AclProviderTest extends \PHPUnit\Framework\TestCase
                 $query['parent'] = $parent;
             }
             $query['entriesInheriting'] = $data[4];
-            $this->oidCollection->insert($query);
+            $this->oidCollection->insertOne($query);
             $this->oids[$id] = $query;
         }
 
@@ -192,7 +192,7 @@ class AclProviderTest extends \PHPUnit\Framework\TestCase
             if ($sid) {
                 $query['securityIdentity'] = $sids[$sid];
             }
-            $this->entryCollection->insert($query);
+            $this->entryCollection->insertOne($query);
         }
     }
 
