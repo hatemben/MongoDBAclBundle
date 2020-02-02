@@ -58,11 +58,11 @@ class InitAclMongoDBCommand extends Command
         $db = $mongo->selectDatabase($dbName);
 
         $oidCollection = $db->selectCollection($this->container->getParameter('doctrine_mongodb.odm.security.acl.oid_collection'));
-        $oidCollection->ensureIndex(['randomKey' => 1], []);
-        $oidCollection->ensureIndex(['identifier' => 1, 'type' => 1]);
+        $oidCollection->createIndex(['randomKey' => 1], []);
+        $oidCollection->createIndex(['identifier' => 1, 'type' => 1]);
 
         $entryCollection = $db->selectCollection($this->container->getParameter('doctrine_mongodb.odm.security.acl.entry_collection'));
-        $entryCollection->ensureIndex(['objectIdentity.$id' => 1]);
+        $entryCollection->createIndex(['objectIdentity.$id' => 1]);
 
         $output->writeln(self::MESSAGE_SUCCESS);
     }
