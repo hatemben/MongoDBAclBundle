@@ -9,14 +9,7 @@ To install MongoDBAclBundle using composer add following line to you composer.js
     # composer.json
     "hatemben/mongodb-acl-bundle": "dev-master"
 
-Then composer update and add the lines below to services.yaml ::
-
-    # services.yaml
-    services:
-        hatemben\MongoDBAclBundle\Command\InitAclMongoDBCommand:
-            public: true
-            tags:
-                - { name: 'console.command', command: 'init:acl:mongodb' }
+Then simply run composer update.
 
 Configuration
 -------------

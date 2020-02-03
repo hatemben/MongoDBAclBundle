@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 
 <container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
         <!-- security/user -->
@@ -15,7 +15,7 @@
                  class="%doctrine_mongodb.odm.security.acl.provider.class%"
                  public="false"
                  abstract="true"
-            >
+        >
             <argument type="service" id="doctrine_mongodb.odm.default_connection" />
             <argument>%doctrine_mongodb.odm.security.acl.database%</argument>
             <argument type="service" id="security.acl.permission_granting_strategy" />
@@ -45,6 +45,13 @@
             <call method="setAuditLogger">
                 <argument type="service" id="security.acl.audit_logger" on-invalid="ignore" />
             </call>
+        </service>
+
+        <!-- Command -->
+        <service id="doctrine_mongodb.odm.security.acl.command" class="hatemben\MongoDBAclBundle\Command\InitAclMongoDBCommand" public="true" autowire="true">
+            <tag name="console.command" command="sonata:admin:init:acl:mongodb" />
+            <tag name="console.name" command="console.command" />
+            <argument type="service" id="service_container"></argument>
         </service>
     </services>
 </container>
