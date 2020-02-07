@@ -3,11 +3,11 @@
 namespace hatemben\MongoDBAclBundle\Security\Acl;
 
 use Doctrine\Common\PropertyChangedListener;
-use Doctrine\DBAL\Connection;
+use MongoDB\Client;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Security\Acl\Domain\RoleSecurityIdentity;
-//use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
-use hatemben\MongoDBAclBundle\Security\Acl\Domain\UserSecurityIdentity;
+use Symfony\Component\Security\Acl\Domain\UserSecurityIdentity;
+//use hatemben\MongoDBAclBundle\Security\Acl\Domain\UserSecurityIdentity;
 use Symfony\Component\Security\Acl\Exception\AclAlreadyExistsException;
 use Symfony\Component\Security\Acl\Exception\ConcurrentModificationException;
 use Symfony\Component\Security\Acl\Model\AclCacheInterface;
@@ -41,7 +41,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
     /**
      * {@inheritDoc}
      */
-    public function __construct(Connection $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
+    public function __construct(Client $container, $database, PermissionGrantingStrategyInterface $permissionGrantingStrategy, array $options, AclCacheInterface $aclCache = null)
     {
         parent::__construct($container, $database, $permissionGrantingStrategy, $options, $aclCache);
 
@@ -77,8 +77,8 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         $children = $this->findChildren($oid);
         foreach ($children as $child) {
             $childId = $child['_id'];
-	    $removable[(string)$childId] = $childId;
-	        if (isset($child['ancestors'])) {
+            $removable[(string)$childId] = $childId;
+            if (isset($child['ancestors'])) {
                 foreach ($child['ancestors'] as $ancestor) {
                     $removable[(string)$ancestor] = $ancestor;
                 }
@@ -216,7 +216,6 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
 
         foreach ($result as $oid) {
             $acl = $result->offsetGet($oid);
-
             if (false === $this->propertyChanges->contains($acl) && $acl instanceof MutableAclInterface) {
                 $acl->addPropertyChangedListener($this);
                 $this->propertyChanges->attach($acl, array());
@@ -242,7 +241,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
      * This allows us to keep track of which values have been changed, so we don't
      * have to do a full introspection when ->updateAcl() is called.
      *
-     * @param mixed $sender
+     * @param MutableAclInterface|EntryInterface $sender
      * @param string $propertyName
      * @param mixed $oldValue
      * @param mixed $newValue
@@ -338,7 +337,6 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
             $data['parent'] = $parentDocument;
             $data['ancestors'] = $ancestors;
         }
-
         // TODO: safe options
         $this->connection->selectCollection($this->options['oid_collection'])->insertOne($data);
     }
@@ -396,7 +394,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
             '$set' => $updates,
         );
 
-        $this->connection->selectCollection($this->options['oid_collection'])->update($entry, $newData);
+        $this->connection->selectCollection($this->options['oid_collection'])->updateOne($entry, $newData);
     }
 
     /**
@@ -419,7 +417,18 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
                     $objectIdentityId = $name === 'classFieldAces' ? null : $ace->getAcl()->getId();
                     $class = $name === 'classFieldAces' ? $ace->getAcl()->getObjectIdentity()->getType() : null;
 
-                    $aceId = (string)$this->insertAccessControlEntry($objectIdentityId, $class, $field, $i, $sid, $ace->getStrategy(), $ace->getMask(), $ace->isGranting(), $ace->isAuditSuccess(), $ace->isAuditFailure());
+                    $aceId = (string)$this->insertAccessControlEntry(
+                        $objectIdentityId,
+                        $class,
+                        $field,
+                        $i,
+                        $sid,
+                        $ace->getStrategy(),
+                        $ace->getMask(),
+                        $ace->isGranting(),
+                        $ace->isAuditSuccess(),
+                        $ace->isAuditFailure()
+                    );
                     $this->loadedAces[$aceId] = $ace;
 
                     $aceIdProperty = new \ReflectionProperty('Symfony\Component\Security\Acl\Domain\Entry', 'id');
@@ -452,21 +461,33 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
      */
     protected function updateAceProperty($name, array $changes)
     {
+        // dump($name,$changes);die();
         list($old, $new) = $changes;
 
         $currentIds = array();
-        for ($i = 0, $c = count($new); $i < $c; $i++) {
-            $ace = $new[$i];
-
+        foreach ($new as $i => $ace) {
             if (null === $ace->getId()) {
                 $sid = $this->getSecurityIdentityQuery($ace->getSecurityIdentity());
+
+                // Delete all old ACl entries related to user
+                $this->DeleteOldUserAcls($sid['username']);
 
                 $objectIdentityId = $name === 'classAces' ? null : $ace->getAcl()->getId();
                 $class = $name === 'classAces' ? $ace->getAcl()->getObjectIdentity()->getType() : null;
 
-                $aceId = (string)$this->insertAccessControlEntry($objectIdentityId, $class, null, $i, $sid, $ace->getStrategy(), $ace->getMask(), $ace->isGranting(), $ace->isAuditSuccess(), $ace->isAuditFailure());
+                $aceId = (string)$this->insertAccessControlEntry(
+                    $objectIdentityId,
+                    $class,
+                    null,
+                    $i,
+                    $sid,
+                    $ace->getStrategy(),
+                    $ace->getMask(),
+                    $ace->isGranting(),
+                    $ace->isAuditSuccess(),
+                    $ace->isAuditFailure()
+                );
                 $this->loadedAces[$aceId] = $ace;
-
                 $aceIdProperty = new \ReflectionProperty($ace, 'id');
                 $aceIdProperty->setAccessible(true);
                 $aceIdProperty->setValue($ace, $aceId);
@@ -475,9 +496,8 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
             }
         }
 
-        for ($i = 0, $c = count($old); $i < $c; $i++) {
-            $ace = $old[$i];
-
+        // This should be deleted, but should be tested for roles before.
+        foreach ($old as $ace) {
             if (!isset($currentIds[$ace->getId()])) {
                 $this->deleteAccessControlEntry($ace->getId());
                 unset($this->loadedAces[$ace->getId()]);
@@ -494,7 +514,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
      */
     protected function getSecurityIdentityQuery(SecurityIdentityInterface $sid)
     {
-        if ($sid instanceof UserSecurityIdentity) {
+        if (is_a($sid, 'Symfony\Component\Security\Acl\Domain\UserSecurityIdentity')) {
             return array('username' => $sid->getUserId(), 'class' => $sid->getClass());
         } else if ($sid instanceof RoleSecurityIdentity) {
             return array('role' => $sid->getRole());
@@ -510,7 +530,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
      * @param string|null $class
      * @param string|null $field
      * @param integer $aceOrder
-     * @param integer $securityIdentityId
+     * @param array $securityIdentity
      * @param string $strategy
      * @param integer $mask
      * @param Boolean $granting
@@ -518,8 +538,18 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
      * @param Boolean $auditFailure
      * @return MongoId
      */
-    protected function insertAccessControlEntry($objectIdentityId, $class, $field, $aceOrder, $securityIdentity, $strategy, $mask, $granting, $auditSuccess, $auditFailure)
-    {
+    protected function insertAccessControlEntry(
+        $objectIdentityId,
+        $class,
+        $field,
+        $aceOrder,
+        array $securityIdentity,
+        $strategy,
+        $mask,
+        $granting,
+        $auditSuccess,
+        $auditFailure
+    ) {
         $criteria = array(
             'aceOrder' => $aceOrder,
             'securityIdentity' => $securityIdentity,
@@ -529,11 +559,10 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
             'auditSuccess' => $auditSuccess,
             'auditFailure' => $auditFailure,
         );
-
         if (isset($objectIdentityId)) {
             $criteria['objectIdentity'] = array(
                 '$ref' => $this->options['oid_collection'],
-                '$id' => new \MongoId($objectIdentityId),
+                '$id' => $objectIdentityId,
             );
         }
         if (isset($class)) {
@@ -542,8 +571,8 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         if (isset($field)) {
             $criteria['fieldName'] = $field;
         }
-        $this->connection->selectCollection($this->options['entry_collection'])->insertOne($criteria);
-        return $criteria['_id'];
+        $res = $this->connection->selectCollection($this->options['entry_collection'])->insertOne($criteria);
+        return $res->getInsertedId();
     }
 
     /**
@@ -590,5 +619,19 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
             );
             $this->connection->selectCollection($this->options['entry_collection'])->update($criteria, array('$set' => $update));
         }
+    }
+
+    /**
+     * Find and return sAcls related to userids
+     *
+     * @param string $userId
+     * @return void
+     */
+    protected function DeleteOldUserAcls($userId){
+
+        $criteria = ['securityIdentity.username'=>$userId];
+
+        return $this->connection->selectCollection($this->options['entry_collection'])->deleteMany($criteria);
+
     }
 }
