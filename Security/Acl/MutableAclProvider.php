@@ -77,8 +77,8 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         $children = $this->findChildren($oid);
         foreach ($children as $child) {
             $childId = $child['_id'];
-            $removable[(string)$childId] = $childId;
-            if (isset($child['ancestors'])) {
+	    $removable[(string)$childId] = $childId;
+	        if (isset($child['ancestors'])) {
                 foreach ($child['ancestors'] as $ancestor) {
                     $removable[(string)$ancestor] = $ancestor;
                 }
@@ -231,7 +231,6 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
                 $parentAcl = $parentAcl->getParentAcl();
             }
         }
-
         return $result;
     }
 
@@ -461,7 +460,6 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
      */
     protected function updateAceProperty($name, array $changes)
     {
-        // dump($name,$changes);die();
         list($old, $new) = $changes;
 
         $currentIds = array();
@@ -515,7 +513,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
     protected function getSecurityIdentityQuery(SecurityIdentityInterface $sid)
     {
         if (is_a($sid, 'Symfony\Component\Security\Acl\Domain\UserSecurityIdentity')) {
-            return array('username' => $sid->getUserId(), 'class' => $sid->getClass());
+            return array('username' => $sid->getUsername(), 'class' => $sid->getClass());
         } else if ($sid instanceof RoleSecurityIdentity) {
             return array('role' => $sid->getRole());
         } else {
@@ -617,7 +615,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
             $criteria = array(
                 '_id' => new \MongoId($ace->getId()),
             );
-            $this->connection->selectCollection($this->options['entry_collection'])->update($criteria, array('$set' => $update));
+            $this->connection->selectCollection($this->options['entry_collection'])->updateOne($criteria, array('$set' => $update));
         }
     }
 
