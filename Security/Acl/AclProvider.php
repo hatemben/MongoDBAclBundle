@@ -15,6 +15,7 @@ use hatemben\MongoDBAclBundle\Security\Acl\Domain\UserSecurityIdentity;
 use Symfony\Component\Security\Acl\Exception\AclNotFoundException;
 use Symfony\Component\Security\Acl\Exception\NotAllAclsFoundException;
 use Symfony\Component\Security\Acl\Model\AclCacheInterface;
+use Symfony\Component\Security\Acl\Model\AclInterface;
 use Symfony\Component\Security\Acl\Model\AclProviderInterface;
 use Symfony\Component\Security\Acl\Model\ObjectIdentityInterface;
 use Symfony\Component\Security\Acl\Model\PermissionGrantingStrategyInterface;
@@ -178,9 +179,9 @@ class AclProvider implements AclProviderInterface
             // Is it time to load the current batch?
             if ((self::MAX_BATCH_SIZE === count($currentBatch) || ($i + 1) === $c) && count($currentBatch) > 0) {
                 $loadedBatch = $this->lookupObjectIdentities($currentBatch, $sids, $oidLookup);
-
                 foreach ($loadedBatch as $loadedOid) {
                     $loadedAcl = $loadedBatch->offsetGet($loadedOid);
+
 
                     if (null !== $this->aclCache) {
                         $this->aclCache->putInCache($loadedAcl);
@@ -208,7 +209,6 @@ class AclProvider implements AclProviderInterface
                 throw $partialResultException;
             }
         }
-
         return $result;
     }
 
@@ -230,8 +230,8 @@ class AclProvider implements AclProviderInterface
         }
 
         list($oids, $types) = $this->getOidTypeSet($objIdentities, $sids);
-        $entryQuery = array('$or' => array(array('objectIdentity.$id' => array('$in' => $oids)), array('securityIdentity.class' => array('$in' => $types))));
-	    $entryCursor = $this->connection->selectCollection($this->options['entry_collection'])->find($entryQuery);
+        $entryQuery = array('$or' => array(array('objectIdentity.$id' => array('$in' => $oids)), array('securityIdentity.class' => array('$in' => array_values($types)))));
+        $entryCursor = $this->connection->selectCollection($this->options['entry_collection'])->find($entryQuery);
         $oidQuery = array('_id' => array('$in' => $oids));
         $oidCursor = $this->connection->selectCollection($this->options['oid_collection'])->find($oidQuery);
         return $this->hydrateObjectIdentities($entryCursor, $oidCursor, $oidLookup, $sids);
@@ -555,7 +555,6 @@ class AclProvider implements AclProviderInterface
         if ($processed < count($parentIdToFill)) {
             throw new \RuntimeException('Not all parent ids were populated. This implies an integrity problem.');
         }
-
         return $result;
     }
 
@@ -577,5 +576,45 @@ class AclProvider implements AclProviderInterface
         );
         $id = $this->connection->selectCollection($this->options['oid_collection'])->findOne($query, $fields);
         return $id ? array_pop($id) : null;
+    }
+
+    /**
+     * This method is called when an ACL instance is retrieved from the cache.
+     *
+     * @param AclInterface $acl
+     */
+    private function updateAceIdentityMap(AclInterface $acl)
+    {
+        foreach (array('classAces', 'classFieldAces', 'objectAces', 'objectFieldAces') as $property) {
+            $reflection = new \ReflectionProperty($acl, $property);
+            $reflection->setAccessible(true);
+            $value = $reflection->getValue($acl);
+            if ('classAces' === $property || 'objectAces' === $property) {
+                $this->doUpdateAceIdentityMap($value);
+            } else {
+                foreach ($value as $field => $aces) {
+                    $this->doUpdateAceIdentityMap($value[$field]);
+                }
+            }
+            $reflection->setValue($acl, $value);
+            $reflection->setAccessible(false);
+        }
+    }
+
+    /**
+     * Does either overwrite the passed ACE, or saves it in the global identity
+     * map to ensure every ACE only gets instantiated once.
+     *
+     * @param array &$aces
+     */
+    private function doUpdateAceIdentityMap(array &$aces)
+    {
+        foreach ($aces as $index => $ace) {
+            if (isset($this->loadedAces[$ace->getId()])) {
+                $aces[$index] = $this->loadedAces[$ace->getId()];
+            } else {
+                $this->loadedAces[$ace->getId()] = $ace;
+            }
+        }
     }
 }
