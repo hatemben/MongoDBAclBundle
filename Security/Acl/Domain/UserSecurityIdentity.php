@@ -11,11 +11,6 @@
 
 namespace hatemben\MongoDBAclBundle\Security\Acl\Domain;
 
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Acl\Util\ClassUtils;
-use Symfony\Component\Security\Acl\Model\SecurityIdentityInterface;
-
 /**
  * A SecurityIdentity implementation used for actual users
  *
@@ -23,27 +18,27 @@ use Symfony\Component\Security\Acl\Model\SecurityIdentityInterface;
  */
 final class UserSecurityIdentity implements SecurityIdentityInterface
 {
-    private $userId;
+    private $id;
     private $class;
 
     /**
      * Constructor
      *
-     * @param string $userId the username representation
+     * @param string $id the username representation
      * @param string $class    the user's fully qualified class name
      *
      * @throws \InvalidArgumentException
      */
-    public function __construct($userId, $class)
+    public function __construct($id, $class)
     {
-        if (empty($userId)) {
-            throw new \InvalidArgumentException('$userId must not be empty.');
+        if (empty($id)) {
+            throw new \InvalidArgumentException('$id must not be empty.');
         }
         if (empty($class)) {
             throw new \InvalidArgumentException('$class must not be empty.');
         }
 
-        $this->userId = (string) $userId;
+        $this->id = (string) $id;
         $this->class = $class;
     }
 
@@ -82,7 +77,7 @@ final class UserSecurityIdentity implements SecurityIdentityInterface
      */
     public function getUsername()
     {
-        return $this->userId;
+        return $this->id;
     }
 
     /**
@@ -90,9 +85,9 @@ final class UserSecurityIdentity implements SecurityIdentityInterface
      *
      * @return string
      */
-    public function getUserId()
+    public function getId()
     {
-        return $this->userId;
+        return $this->id;
     }
 
     /**
@@ -110,12 +105,10 @@ final class UserSecurityIdentity implements SecurityIdentityInterface
      */
     public function equals(SecurityIdentityInterface $sid)
     {
-
-        if (!$sid instanceof UserSecurityIdentity) {
+        if (get_class($sid)!='hatemben\MongoDBAclBundle\Security\Acl\Domain\UserSecurityIdentity') {
             return false;
         }
-
-        return $this->userId === $sid->getUsername()
+        return $this->id === $sid->getId()
             && $this->class === $sid->getClass();
     }
 
@@ -128,6 +121,6 @@ final class UserSecurityIdentity implements SecurityIdentityInterface
      */
     public function __toString()
     {
-        return sprintf('UserSecurityIdentity(%s, %s)', $this->userId, $this->class);
+        return sprintf('UserSecurityIdentity(%s, %s)', $this->id, $this->class);
     }
 }
