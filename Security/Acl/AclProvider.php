@@ -465,11 +465,11 @@ class AclProvider implements AclProviderInterface
                     // It is important to only ever have one ACE instance per actual row since
                     // some ACEs are shared between ACL instances
                     if (!isset($loadedAces[$aceId])) {
-                        if (isset($entry['securityIdentity']['username'])) {
-                            $securityId = '1' . $entry['securityIdentity']['username'];
+                        if (isset($entry['securityIdentity']['id'])) {
+                            $securityId = '1' . $entry['securityIdentity']['id'];
                             if (!isset($sids[$securityId])) {
                                 $sids[$securityId] = new UserSecurityIdentity(
-                                    $entry['securityIdentity']['username'],
+                                    $entry['securityIdentity']['id'],
                                     $entry['securityIdentity']['class']
                                 );
                             }
