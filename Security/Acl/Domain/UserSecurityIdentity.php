@@ -110,9 +110,10 @@ final class UserSecurityIdentity implements SecurityIdentityInterface
      */
     public function equals(SecurityIdentityInterface $sid)
     {
-        if (get_class($sid)!='hatemben\MongoDBAclBundle\Security\Acl\Domain\UserSecurityIdentity') {
+        if (get_class($sid)!=self::class) {
             return false;
         }
+
         return $this->id === $sid->getId()
             && $this->class === $sid->getClass();
     }
