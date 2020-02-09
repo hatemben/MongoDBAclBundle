@@ -11,6 +11,11 @@
 
 namespace hatemben\MongoDBAclBundle\Security\Acl\Domain;
 
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Acl\Util\ClassUtils;
+use Symfony\Component\Security\Acl\Model\SecurityIdentityInterface;
+
 /**
  * A SecurityIdentity implementation used for actual users
  *
