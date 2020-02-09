@@ -1,9 +1,9 @@
 MongoDB ACL Bundle
 ====================
 
-This bundle allows the use of MongoDB as the storage layer for the Symfony ACLs component. This bundle's code is very old, will look around and update it.
+This bundle allows the use of MongoDB as the storage layer for the Symfony ACLs component.
 
-First working alpha, but lots of tests need to be done, and code to be reviewed.
+First working version, tests need to be update, and code to be reviewed. This version have been updated to use user's id in UserSecurityIdentity.  
 
 ![Image of User Acl](Resources/public/images/user-acl.png)
 
