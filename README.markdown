@@ -3,7 +3,8 @@ MongoDB ACL Bundle
 
 This bundle allows the use of MongoDB as the storage layer for the Symfony ACLs component.
 
-First working version, tests need to be update, and code to be reviewed. This version have been updated to use user's id in UserSecurityIdentity.  
+This is the working version with an ODM. Notice that it works only with Sonata Admin ACL editor for users/roles, but not with Groups !
+Tests need to be updated, and code to be reviewed. This version have been updated to use user's id in UserSecurityIdentity instead of username.  
 
 ![Image of User Acl](Resources/public/images/user-acl.png)
 
