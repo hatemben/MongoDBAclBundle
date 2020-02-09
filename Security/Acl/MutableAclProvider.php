@@ -466,9 +466,11 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         foreach ($new as $i => $ace) {
             if (null === $ace->getId()) {
                 $sid = $this->getSecurityIdentityQuery($ace->getSecurityIdentity());
-
                 // Delete all old ACl entries related to user
-                $this->DeleteOldUserAcls($sid['username']);
+                if (isset($sid['id'])){
+                    $this->DeleteOldUserAcls($sid['id']);
+                }
+
 
                 $objectIdentityId = $name === 'classAces' ? null : $ace->getAcl()->getId();
                 $class = $name === 'classAces' ? $ace->getAcl()->getObjectIdentity()->getType() : null;
@@ -513,7 +515,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
     protected function getSecurityIdentityQuery(SecurityIdentityInterface $sid)
     {
         if (is_a($sid, 'Symfony\Component\Security\Acl\Domain\UserSecurityIdentity')) {
-            return array('username' => $sid->getUsername(), 'class' => $sid->getClass());
+            return array('id' => $sid->getId(), 'class' => $sid->getClass());
         } else if ($sid instanceof RoleSecurityIdentity) {
             return array('role' => $sid->getRole());
         } else {
@@ -627,7 +629,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
      */
     protected function DeleteOldUserAcls($userId){
 
-        $criteria = ['securityIdentity.username'=>$userId];
+        $criteria = ['securityIdentity.id'=>$userId];
 
         return $this->connection->selectCollection($this->options['entry_collection'])->deleteMany($criteria);
 
