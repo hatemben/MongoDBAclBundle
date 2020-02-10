@@ -93,7 +93,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         $query = array(
             '_id' => array('$in' => $removable),
         );
-        $this->connection->selectCollection($this->options['oid_collection'])->remove($query);
+        $this->connection->selectCollection($this->options['oid_collection'])->deleteOne($query);
         $this->deleteAccessControlEntries($removable);
 
         // evict the ACL from the in-memory identity map
@@ -352,7 +352,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         $query = array(
             'objectIdentity.$id' => array('$in' => $removableIds),
         );
-        $this->connection->selectCollection($this->options['entry_collection'])->remove($query);
+        $this->connection->selectCollection($this->options['entry_collection'])->deleteOne($query);
     }
 
     /**
@@ -585,7 +585,7 @@ class MutableAclProvider extends AclProvider implements MutableAclProviderInterf
         $criteria = array(
             '_id' => new \MongoId($id),
         );
-        $this->connection->selectCollection($this->options['entry_collection'])->remove($criteria);
+        $this->connection->selectCollection($this->options['entry_collection'])->deleteOne($criteria);
     }
 
     /**
